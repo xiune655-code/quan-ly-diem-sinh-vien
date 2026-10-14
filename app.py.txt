@@ -1,0 +1,122 @@
+# QUAN LY DIEM SINH VIEN - STREAMLIT
+
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+st.set_page_config(
+    page_title="Quan ly diem sinh vien",
+    page_icon="📚",
+    layout="wide"
+)
+
+# 1. TAO DU LIEU
+data = {
+    "Ho_ten": [
+        "Nguyen An", "Tran Binh", "Le Chi", "Pham Dung",
+        "Hoang Giang", "Vu Hanh", "Do Khoa", "Bui Lan",
+        "Ngo Minh", "Dang Nam"
+    ],
+    "Chuyen_can": [9, 8,9,6,7,8,8,7,9,6],
+    "Giua_ky":    [8, 9,6,7,8,5,9,8,7,8],
+    "Cuoi_ky":    [9, 8, 7, 5,8,6,9,7,8,9]
+}
+
+df = pd.DataFrame(data)
+
+# 2. TINH DIEM TONG KET
+df["Tong_ket"] = (
+    0.2 * df["Chuyen_can"]
+    + 0.3 * df["Giua_ky"]
+    + 0.5 * df["Cuoi_ky"]
+).round(2)
+
+# 3. XEP LOAI
+def xep_loai(diem):
+    if diem >= 8.5:
+        return "Gioi"
+    elif diem >= 7:
+        return "Kha"
+    elif diem >= 5:
+        return "Trung binh"
+    return "Yeu"
+
+df["Xep_loai"] = df["Tong_ket"].apply(xep_loai)
+
+# 4. TIEU DE
+st.title("QUẢN LÝ ĐIỂM SINH VIÊN")
+st.write("Ứng dụng quản lý điểm bằng Python và Streamlit")
+
+# 5. BANG DIEM
+st.subheader("Bảng điểm 10 sinh viên")
+
+bang = df.rename(columns={
+    "Ho_ten": "Họ tên",
+    "Chuyen_can": "Chuyên cần",
+    "Giua_ky": "Giữa kỳ",
+    "Cuoi_ky": "Cuối kỳ",
+    "Tong_ket": "Tổng kết",
+    "Xep_loai": "Xếp loại"
+})
+
+st.dataframe(bang, use_container_width=True)
+
+# 6. THONG KE
+sv_max = df.loc[df["Tong_ket"].idxmax()]
+sv_min = df.loc[df["Tong_ket"].idxmin()]
+diem_tb = df["Tong_ket"].mean()
+so_sv_dat = int((df["Tong_ket"] >= 5).sum())
+
+st.subheader("Thống kê kết quả học tập")
+
+c1, c2 = st.columns(2)
+c1.metric("Điểm trung bình lớp", f"{diem_tb:.2f}")
+c2.metric("Số sinh viên đạt", f"{so_sv_dat}/10")
+
+c3, c4 = st.columns(2)
+c3.write(
+    f"**Điểm cao nhất:** {sv_max['Ho_ten']} "
+    f"({sv_max['Tong_ket']:.2f})"
+)
+c4.write(
+    f"**Điểm thấp nhất:** {sv_min['Ho_ten']} "
+    f"({sv_min['Tong_ket']:.2f})"
+)
+
+# 7. CHON SINH VIEN
+st.subheader("Tra cứu điểm sinh viên")
+
+ten_sv = st.selectbox(
+    "Chọn sinh viên",
+    df["Ho_ten"].tolist()
+)
+
+sv = df[df["Ho_ten"] == ten_sv].iloc[0]
+
+a, b, c = st.columns(3)
+a.metric("Chuyên cần", f"{sv['Chuyen_can']:.1f}")
+b.metric("Giữa kỳ", f"{sv['Giua_ky']:.1f}")
+c.metric("Cuối kỳ", f"{sv['Cuoi_ky']:.1f}")
+
+st.write(f"**Điểm tổng kết:** {sv['Tong_ket']:.2f}")
+st.write(f"**Xếp loại:** {sv['Xep_loai']}")
+
+# 8. BIEU DO COT
+st.subheader("Biểu đồ điểm tổng kết")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.bar(df["Ho_ten"], df["Tong_ket"])
+ax.set_title("Điểm tổng kết của 10 sinh viên")
+ax.set_xlabel("Họ tên sinh viên")
+ax.set_ylabel("Điểm tổng kết")
+ax.set_ylim(0, 10)
+ax.tick_params(axis="x", rotation=45)
+fig.tight_layout()
+
+st.pyplot(fig)
+plt.close(fig)
+
+# 9. THONG TIN NGUOI TAO
+st.divider()
+st.caption("Người tạo ứng dụng: [Trần Minh Nhật]")
+st.caption("MSSV: [060208012893]")
